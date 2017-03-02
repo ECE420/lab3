@@ -12,6 +12,8 @@ Compiling:
 #include <math.h>
 #include "Lab3IO.h"
 
+#include "timer.h"
+
 #define TOL 0.0005
 
 int main(int argc, char* argv[])
@@ -19,24 +21,24 @@ int main(int argc, char* argv[])
 	int i, j, k, size;
 	double** Au;
 	double* X;
-	double temp, error, Xnorm;
+	double temp;
 	int* index;
-	FILE* fp;
+	//FILE* fp;
+	double start, end;
+	int thread_count=0;
 
 	/*Load the datasize and verify it*/
 	Lab3LoadInput(&Au, &size);
-	if ((fp = fopen("data_output","r")) == NULL){
-		printf("Fail to open the result data file!\n");
-		return 2;
-	}
-	fscanf(fp, "%d\n\n", &i);
-	if (i != size){
-		printf("The problem size of the input file and result file does not match!\n");
-		return -1;
-	}
-	/*Calculate the solution by serial code*/
+
+	thread_count = atoi(argv[1]);
+
+	/*Calculate the solution by parallel code*/
 	X = CreateVec(size);
     index = malloc(size * sizeof(int));
+
+
+    GET_TIME(start);
+   // # pragma omp parallel for num_threads(thread_count)
     for (i = 0; i < size; ++i)
         index[i] = i;
 
@@ -47,7 +49,8 @@ int main(int argc, char* argv[])
         for (k = 0; k < size - 1; ++k){
             /*Pivoting*/
             temp = 0;
-            for (i = k, j = 0; i < size; ++i)
+	    j = 0;
+            for (i = k; i < size; ++i)
                 if (temp < Au[index[i]][k] * Au[index[i]][k]){
                     temp = Au[index[i]][k] * Au[index[i]][k];
                     j = i;
@@ -57,6 +60,8 @@ int main(int argc, char* argv[])
                 index[j] = index[k];
                 index[k] = i;
             }
+    	    # pragma omp parallel for num_threads(thread_count)\
+		private(j,temp)
             /*calculating*/
             for (i = k + 1; i < size; ++i){
                 temp = Au[index[i]][k] / Au[index[k]][k];
@@ -73,29 +78,17 @@ int main(int argc, char* argv[])
             } 
         }
         /*solution*/
+	//# pragma omp parallel for num_threads(thread_count)
         for (k=0; k< size; ++k)
             X[k] = Au[index[k]][size] / Au[index[k]][k];
     }
+    GET_TIME(end);
 
-	/*compare the solution*/
-	error = 0;
-	Xnorm = 0;	
-	for (i = 0; i < size; ++i){
-		fscanf(fp, "%lf\t", &temp);
-		error += (temp-X[i]) * (temp-X[i]);
-		Xnorm += X[i]*X[i];
-	}
-	error = sqrt(error);
-	Xnorm = sqrt(Xnorm);
-	printf("The relative error to the reference solution is %e\n", error / Xnorm);
-	if (error / Xnorm <= TOL)
-		printf("Congratulation!!! Your result is accepted!\n");
-	else
-		printf("Sorry, your result is wrong.\n");
 	
-	fclose(fp);
+    Lab3SaveOutput(X,size,end-start);
     DestroyVec(X);
     DestroyMat(Au, size);
     free(index);
+
 	return 0;	
 }
