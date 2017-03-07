@@ -18,7 +18,6 @@ Compiling:
 
 int main(int argc, char* argv[])
 {
-	printf("program starts");
 	int i, j, k, size;
 	double** Au;
 	double* X;
@@ -36,6 +35,8 @@ int main(int argc, char* argv[])
 	/*Calculate the solution by parallel code*/
 	X = CreateVec(size);
     index = malloc(size * sizeof(int));
+
+
     GET_TIME(start);
    // # pragma omp parallel for num_threads(thread_count)
     for (i = 0; i < size; ++i)
@@ -47,33 +48,22 @@ int main(int argc, char* argv[])
         /*Gaussian elimination*/
         for (k = 0; k < size - 1; ++k){
             /*Pivoting*/
-        temp = 0;
-	j = 0;
-	int largest =0;    
-	# pragma omp parallel private(j)
-	{
-		j = 0;
-		#pragma omp for
-		for (i = k; i < size; ++i)
-			if (temp < Au[index[i]][k] * Au[index[i]][k]){
-			    temp = Au[index[i]][k] * Au[index[i]][k];
-			    j = i;
-			}
-		printf("the %d thread,has j = %d temp is %d \n",omp_get_thread_num(),j,Au[index[i]][k]);
-		if (Au[index[j]][k] > largest){
-			#pragma critical  
-			{
-			if (Au[index[j]][k] > largest && (j!= k))/*swap*/{
-				i = index[j];
-				index[j] = index[k];
-				index[k] = i;
-				largest = Au[index[i]][k]; 
-			}
-			}
-		}
 
-	}
-	printf("has j = %d temp is %d \n",j,Au[index[i]][k]);
+
+            temp = 0;
+	    j = 0;
+            for (i = k; i < size; ++i)
+                if (temp < Au[index[i]][k] * Au[index[i]][k]){
+                    temp = Au[index[i]][k] * Au[index[i]][k];
+                    j = i;
+                }
+            if (j != k)/*swap*/{
+                i = index[j];
+                index[j] = index[k];
+                index[k] = i;
+            }
+
+
 
 
     	    # pragma omp parallel for num_threads(thread_count)\
@@ -99,9 +89,12 @@ int main(int argc, char* argv[])
             X[k] = Au[index[k]][size] / Au[index[k]][k];
     }
     GET_TIME(end);
+
+	
     Lab3SaveOutput(X,size,end-start);
     DestroyVec(X);
     DestroyMat(Au, size);
     free(index);
-    return 0;	
+
+	return 0;	
 }
