@@ -47,34 +47,39 @@ int main(int argc, char* argv[])
         /*Gaussian elimination*/
         for (k = 0; k < size - 1; ++k){
             /*Pivoting*/
-        temp = 0;
 	j = 0;
-	int largest =0;    
-	# pragma omp parallel private(j)
+	double largest =0;    
+	int largest_index = 0;
+	# pragma omp parallel private(temp,j) //share(largest_index)
 	{
 		j = 0;
+        	temp = 0;
 		#pragma omp for
-		for (i = k; i < size; ++i)
+		for (i = k; i < size; ++i){
 			if (temp < Au[index[i]][k] * Au[index[i]][k]){
 			    temp = Au[index[i]][k] * Au[index[i]][k];
-			    j = i;
+			    j = i; 
+			    printf("the %d thread,has j = %d temp is %f \n",omp_get_thread_num(),j,temp);
 			}
-		printf("the %d thread,has j = %d temp is %d \n",omp_get_thread_num(),j,Au[index[i]][k]);
+		}
 		if (Au[index[j]][k] > largest){
+			printf("j is %d k is %d before critial the largest is %f Au[index[j]][k] is %f \n",j,k,largest, Au[index[j]][k]); // Au value fail
 			#pragma critical  
 			{
+			printf("j is %d k is %d after critical the largest is %f Au[index[j]][k] is %f \n",j,k,largest, Au[index[j]][k]); // after critial value changed.. why?
 			if (Au[index[j]][k] > largest && (j!= k))/*swap*/{
-				i = index[j];
-				index[j] = index[k];
-				index[k] = i;
-				largest = Au[index[i]][k]; 
+				largest = Au[index[j]][k]; 
+				largest_index = j;
+				printf("before swap  k is %d has j = %d largest_index is %d largest is %f \n",k,j,largest_index,largest);
 			}
 			}
 		}
 
 	}
-	printf("has j = %d temp is %d \n",j,Au[index[i]][k]);
 
+	i = index[largest_index];
+	index[largest_index] = index[k];
+	index[k] = i;
 
     	    # pragma omp parallel for num_threads(thread_count)\
 		private(j,temp)
