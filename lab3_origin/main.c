@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
         for (k = 0; k < size - 1; ++k){
             /*Pivoting*/
 	j = 0;
-	double largest =0;    
+	double largest =0.0;    
 	int largest_index = 0;
 	# pragma omp parallel private(temp,j) //share(largest_index)
 	{
 		j = 0;
-        	temp = 0;
+        	temp = 0.0;
 		#pragma omp for
 		for (i = k; i < size; ++i){
 			if (temp < Au[index[i]][k] * Au[index[i]][k]){
