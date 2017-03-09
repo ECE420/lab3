@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
 	double start, end;
 	int thread_count=0;
 
-	int temp_index;
+	int largest;
+	int largest_index;
 	/*Load the datasize and verify it*/
 	Lab3LoadInput(&Au, &size);
 
@@ -48,35 +49,41 @@ int main(int argc, char* argv[])
     else
 	{
         /*Gaussian elimination*/
-		# pragma omp parallel num_threads(thread_count) \
-			private(temp,temp_index)
+
         for (k = 0; k < size - 1; ++k)
 		{
             /*Pivoting*/
             temp = 0;
 			j = 0;
-			temp_index = 0;
-			# pragma omp for 
+			largest = 0;
+			largest_index = 0;
+			
+		# pragma omp parallel for num_threads(thread_count) \
+			private(temp,j)
+		{
             for (i = k; i < size; ++i)
                 if (temp < Au[index[i]][k] * Au[index[i]][k])
 				{
                     temp = Au[index[i]][k] * Au[index[i]][k];
-                    temp_index = i;
+                    j = i;
                 }
-			if( temp > Au[index[i]][k] * Au[index[i]][k] ){
+			if( largest < Au[index[i]][k] * Au[index[i]][k] )
+			{
 				#pragma critical
 				{
-					if( temp > Au[index[i]][k] * Au[index[i]][k] ){
-						j = temp_index;
+					if( largest < Au[index[i]][k] * Au[index[i]][k] && (j!=k)){
+						largest_index = j;
+						largest = Au[index[i]][k] * Au[index[i]][k];
 					}
 				}
 			}
-			# pragma omp single
-            if (j != k)/*swap*/{
+		}
+			//# pragma omp single
+            //if (j != k)/*swap*/{
                 i = index[j];
                 index[j] = index[k];
                 index[k] = i;
-            }
+            //}
 			
     	    # pragma omp for private(j,temp)
             /*calculating*/
