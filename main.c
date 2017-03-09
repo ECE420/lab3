@@ -53,20 +53,25 @@ int main(int argc, char* argv[])
         for (k = 0; k < size - 1; ++k)
 		{
             /*Pivoting*/
-            temp = 0;
-			j = 0;
+
 			largest = 0;
 			largest_index = 0;
 			
-		# pragma omp parallel for num_threads(thread_count) \
+		# pragma omp parallel num_threads(thread_count) \
 			private(temp,j)
 		{
-            for (i = k; i < size; ++i)
+			temp = 0;
+			j = 0;
+			# pragma omp for
+            for (i = k; i < size; ++i){
+				
+			
                 if (temp < Au[index[i]][k] * Au[index[i]][k])
 				{
                     temp = Au[index[i]][k] * Au[index[i]][k];
                     j = i;
                 }
+			}
 			if( largest < Au[index[i]][k] * Au[index[i]][k] )
 			{
 				#pragma critical
@@ -87,20 +92,24 @@ int main(int argc, char* argv[])
 			
     	    # pragma omp for private(j,temp)
             /*calculating*/
-            for (i = k + 1; i < size; ++i){
+            for (i = k + 1; i < size; ++i)
+			{
                 temp = Au[index[i]][k] / Au[index[k]][k];
                 for (j = k; j < size + 1; ++j)
                     Au[index[i]][j] -= Au[index[k]][j] * temp;
             }       
         }
         /*Jordan elimination*/
-        for (k = size - 1; k > 0; --k){
-            for (i = k - 1; i >= 0; --i ){
+        for (k = size - 1; k > 0; --k)
+		{
+            for (i = k - 1; i >= 0; --i )
+			{
                 temp = Au[index[i]][k] / Au[index[k]][k];
                 Au[index[i]][k] -= temp * Au[index[k]][k];
                 Au[index[i]][size] -= temp * Au[index[k]][size];
             } 
         }
+	
         /*solution*/
 	//# pragma omp parallel for num_threads(thread_count)
         for (k=0; k< size; ++k)
