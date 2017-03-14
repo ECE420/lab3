@@ -48,9 +48,9 @@ int main(int argc, char* argv[])
         for (k = 0; k < size - 1; ++k){
             /*Pivoting*/
 	j = 0;
-	double largest =0.0;    
+	double largest =1.0;    
 	int largest_index = 0;
-	# pragma omp parallel private(temp,j) //share(largest_index)
+	# pragma omp parallel num_threads(thread_count) private(temp,j) //share(largest_index)
 	{
 		j = 0;
         	temp = 0.0;
@@ -59,24 +59,21 @@ int main(int argc, char* argv[])
 			if (temp < Au[index[i]][k] * Au[index[i]][k]){
 			    temp = Au[index[i]][k] * Au[index[i]][k];
 			    j = i; 
-			    printf("the %d thread,has j = %d temp is %f \n",omp_get_thread_num(),j,temp);
 			}
 		}
-		if (Au[index[j]][k] > largest){
-			printf("j is %d k is %d before critial the largest is %f Au[index[j]][k] is %f \n",j,k,largest, Au[index[j]][k]); // Au value fail
+		if (Au[index[j]][k]*Au[index[j]][k] > largest){
+		//	printf("%f\n", Au[index[j]][k]);
 			#pragma critical  
 			{
-			printf("j is %d k is %d after critical the largest is %f Au[index[j]][k] is %f \n",j,k,largest, Au[index[j]][k]); // after critial value changed.. why?
-			if (Au[index[j]][k] > largest && (j!= k))/*swap*/{
-				largest = Au[index[j]][k]; 
+			if (Au[index[j]][k]*Au[index[j]][k] > largest && (j!= k))/*swap*/{
+				largest = Au[index[j]][k]*Au[index[j]][k]; 
 				largest_index = j;
-				printf("before swap  k is %d has j = %d largest_index is %d largest is %f \n",k,j,largest_index,largest);
 			}
 			}
 		}
 
 	}
-
+	PrintMat(Au,4,4);
 	i = index[largest_index];
 	index[largest_index] = index[k];
 	index[k] = i;

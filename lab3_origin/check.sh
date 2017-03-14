@@ -105,4 +105,4 @@ echo "Evaluating the results..."
 
 ## post-processing
 cd ..
-##rm -rf tmp
+rm -rf tmp
