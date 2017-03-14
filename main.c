@@ -14,8 +14,6 @@ Compiling:
 
 #include "timer.h"
 
-#define TOL 0.0005
-
 int main(int argc, char* argv[])
 {
 	int i, j, k, size;
