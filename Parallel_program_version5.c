@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
             j = 0;
             #pragma omp parallel num_threads(thread_count)
             {
-                #pragma omp for schedule(dynamic,8)
+                #pragma omp for schedule(guided,4)
                 for (i = k; i < size; ++i)
                 {
                     if (temp < Au[index[i]][k] * Au[index[i]][k]){
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
                 }
 
                 /*calculating*/
-                #pragma omp for private(temp, j) schedule(dynamic,8)
+                #pragma omp for private(temp, j) schedule(guided,4)
                 for (i = k + 1; i < size; ++i)
                 {
                     temp = Au[index[i]][k] / Au[index[k]][k];
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         /*Jordan elimination*/
         for (k = size - 1; k > 0; --k)
         {
-            #pragma omp parallel for num_threads(thread_count) private(temp) schedule(dynamic,8)
+            #pragma omp parallel for num_threads(thread_count) private(temp) schedule(guided,4)
             for (i = k - 1; i >= 0; --i )
             {
                 temp = Au[index[i]][k] / Au[index[k]][k];
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
             } 
         }
         /*solution*/
-        #pragma omp parallel for num_threads(thread_count) schedule(dynamic,8)
+        #pragma omp parallel for num_threads(thread_count) schedule(guided,4)
         for (k=0; k< size; ++k)
         {
             X[k] = Au[index[k]][size] / Au[index[k]][k];
