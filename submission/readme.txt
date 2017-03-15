@@ -1,4 +1,7 @@
+
 lab3
+
+
 Makefile : use ./make to compile all of the files needed
 serialtester.c : used for calculate right value
 timer.h : used to measure the time consuming
